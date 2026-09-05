@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>حاسبة نتائج تريكس وكومبليكس - Trix & Complex Scoreboard</title>
+
+  <!-- Google Fonts for crisp Arabic Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+            <path d="M7 8h10M7 12h10M7 16h6"></path>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>حاسبة</h1>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <!-- Player Mode Selector -->
+        <div class="player-mode-toggle" id="playerModeToggle">
+          <button type="button" class="mode-btn active" data-players="4">4 لاعبين</button>
+          <button type="button" class="mode-btn" data-players="3">3 لاعبين</button>
+        </div>
+
+        <button type="button" class="btn btn-secondary btn-icon" id="btnUndoRound" title="التراجع عن آخر جولة" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 14L4 9l5-5"></path>
+            <path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"></path>
+          </svg>
+          <span>تراجع</span>
+        </button>
+
+        <button type="button" class="btn btn-danger-soft btn-icon" id="btnHeaderReset" title="تصفير الكل">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <polyline points="23 20 23 14 17 14"></polyline>
+            <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path>
+          </svg>
+          <span>تصفير</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Game Board Grid -->
+    <main class="game-board">
+      <div class="players-grid" id="playersGrid">
+        <!-- Player Columns will be rendered dynamically by JavaScript -->
+      </div>
+    </main>
+
+    <!-- Sticky Bottom Actions Bar -->
+    <footer class="action-bar">
+      <div class="action-bar-inner">
+        <button type="button" class="btn btn-outline" id="btnClearRound">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          <span>مسح إدخال الجولة</span>
+        </button>
+
+        <button type="button" class="btn btn-primary btn-submit-round" id="btnSubmitRound">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>تسجيل الجولة</span>
+        </button>
+
+        <button type="button" class="btn btn-warning" id="btnEndMatch">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+            <line x1="9" y1="9" x2="9.01" y2="9"></line>
+            <line x1="15" y1="9" x2="15.01" y2="9"></line>
+          </svg>
+          <span>نهاية الصكة</span>
+        </button>
+      </div>
+    </footer>
+
+    <!-- Collapsible Match History Drawer -->
+    <section class="history-section" id="historySection">
+      <div class="history-header" id="historyHeader">
+        <div class="history-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <h3>سجل الجولات المسجلة (<span id="roundCount">0</span>)</h3>
+        </div>
+        <button type="button" class="history-toggle-btn" id="historyToggleBtn" aria-label="تبديل عرض السجل">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+      </div>
+
+      <div class="history-content hidden" id="historyContent">
+        <div class="table-responsive">
+          <table class="history-table" id="historyTable">
+            <thead>
+              <tr id="historyTableHeader">
+                <th>الجولة</th>
+                <!-- Player names added dynamically -->
+              </tr>
+            </thead>
+            <tbody id="historyTableBody">
+              <!-- Round history rows added dynamically -->
+            </tbody>
+          </table>
+        </div>
+        <div class="history-empty" id="historyEmpty">لا توجد جولات مسجلة بعد</div>
+      </div>
+    </section>
+
+    <!-- Confirmation Modal for Reset All -->
+    <div class="modal-backdrop hidden" id="resetModalBackdrop">
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-icon danger-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </div>
+        <h2 class="modal-title" id="modalTitle">هل أنت متأكد؟</h2>
+        <p class="modal-body-text">سيتم حذف جميع البيانات والنتائج الحالية. هل تريد المتابعة؟</p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" id="btnCancelReset">إلغاء</button>
+          <button type="button" class="btn btn-danger" id="btnConfirmReset">نعم، تصفير الكل</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal for End of Game / نهاية الصكة -->
+    <div class="modal-backdrop hidden" id="endMatchModalBackdrop">
+      <div class="modal-card end-match-card" role="dialog" aria-modal="true">
+        <div class="winner-trophy-badge">🏆</div>
+        <h2 class="modal-title">نهاية الصكة!</h2>
+        <p class="modal-body-text">الترتيب النهائي للمباراة وإجمالي النقاط</p>
+
+        <div class="leaderboard-list" id="leaderboardList">
+          <!-- Dynamic Leaderboard Items rendered by JS -->
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" id="btnCloseEndMatch">متابعة اللعب</button>
+          <button type="button" class="btn btn-primary" id="btnNewMatchFromEnd">مباراة جديدة</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast hidden" id="toast"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
