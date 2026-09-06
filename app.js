@@ -4,17 +4,18 @@
  */
 
 // Version marker for automatic LocalStorage state migration
-const APP_VERSION = 8;
+const APP_VERSION = 9;
 
 // Helper to get clean default input object per player
 function getDefaultInput() {
   return {
-    queensNormal: 0,    // البنات العادية (-25)
-    queensDoubled: 0,   // البنات المدبلة (-50)
-    kingState: 'none',  // 'none' (0), 'normal' (-75), 'doubled' (-150), 'posDouble' (+150)
-    diamonds: 0,        // الديمن (-10)
-    tricks: 0,          // الأكلات (-10)
-    trixRank: null      // 1 (+200), 2 (+150), 3 (+100), 4 (+50)
+    queensNormal: 0,        // البنات العادية (-25)
+    queensDoubled: 0,       // البنات المدبلة (-50 أو +50 في حال تفعيل الموجب)
+    queensDoubledPos: false,// زر التبديل بين موجب وسالب للبنات المدبلة
+    kingState: 'none',      // 'none' (0), 'normal' (-75), 'doubled' (-150), 'posDouble' (+150)
+    diamonds: 0,            // الديمن (-10)
+    tricks: 0,              // الأكلات (-10)
+    trixRank: null          // 1 (+200), 2 (+150), 3 (+100), 4 (+50)
   };
 }
 
@@ -151,7 +152,10 @@ function setPlayerCount(count) {
 // Helper to calculate round score for a given player input
 function calculatePlayerRoundScore(input) {
   const queensNormalPts = (input.queensNormal || 0) * -25;
-  const queensDoubledPts = (input.queensDoubled || 0) * -50;
+  
+  // Doubled queens: -50 if normal, +50 if positive toggle is enabled
+  const qDoubledMultiplier = input.queensDoubledPos ? 50 : -50;
+  const queensDoubledPts = (input.queensDoubled || 0) * qDoubledMultiplier;
 
   let kingPts = 0;
   if (input.kingState === 'normal') kingPts = -75;
@@ -225,7 +229,17 @@ function createPlayerColumnDOM(player, roundScore) {
   // Combined Queens points
   const qNormal = player.input.queensNormal || 0;
   const qDoubled = player.input.queensDoubled || 0;
-  const totalQueensPts = (qNormal * -25) + (qDoubled * -50);
+  const qDoubledMult = player.input.queensDoubledPos ? 50 : -50;
+  const totalQueensPts = (qNormal * -25) + (qDoubled * qDoubledMult);
+
+  let queensTagClass = '';
+  let formattedQueensPts = `${totalQueensPts}`;
+  if (totalQueensPts < 0) {
+    queensTagClass = 'active-negative';
+  } else if (totalQueensPts > 0) {
+    queensTagClass = 'active-positive';
+    formattedQueensPts = `+${totalQueensPts}`;
+  }
 
   // King points for header tag
   let kingScoreTag = '0';
@@ -265,7 +279,7 @@ function createPlayerColumnDOM(player, roundScore) {
     <!-- 5 Contract Inputs List -->
     <div class="contract-list">
       
-      <!-- 1. البنات (مدمجة: عادية ومدبلة) -->
+      <!-- 1. البنات (عادية + مدبلة مع زر تبديل موجب/سالب) -->
       <div class="contract-item merged-queens-item">
         <div class="contract-item-header">
           <div class="contract-title-group">
@@ -274,15 +288,17 @@ function createPlayerColumnDOM(player, roundScore) {
               <span class="contract-name">البنات</span>
             </div>
           </div>
-          <span class="contract-score-tag ${totalQueensPts < 0 ? 'active-negative' : ''}">
-            ${totalQueensPts}
+          <span class="contract-score-tag ${queensTagClass}">
+            ${formattedQueensPts}
           </span>
         </div>
 
         <div class="sub-counters-grid">
           <!-- عادية (-25) -->
           <div class="sub-counter-box">
-            <span class="sub-counter-label">عادية (-25)</span>
+            <div class="sub-counter-header">
+              <span class="sub-counter-label">عادية (-25)</span>
+            </div>
             <div class="counter-control mini-counter">
               <button type="button" class="counter-btn" data-action="dec" data-contract="queensNormal" ${qNormal <= 0 ? 'disabled' : ''}>−</button>
               <span class="counter-value ${qNormal > 0 ? 'has-value' : ''}">${qNormal}</span>
@@ -290,9 +306,19 @@ function createPlayerColumnDOM(player, roundScore) {
             </div>
           </div>
 
-          <!-- مدبلة (-50) -->
-          <div class="sub-counter-box">
-            <span class="sub-counter-label">مدبلة (-50)</span>
+          <!-- مدبلة (-50 أو +50) -->
+          <div class="sub-counter-box ${player.input.queensDoubledPos ? 'is-pos-mode' : ''}">
+            <div class="sub-counter-header">
+              <span class="sub-counter-label">${player.input.queensDoubledPos ? 'موجب (+50)' : 'مدبلة (-50)'}</span>
+              <button 
+                type="button" 
+                class="queen-pos-toggle-btn ${player.input.queensDoubledPos ? 'active' : ''}" 
+                data-action="toggle-queen-pos"
+                title="تبديل بين سالب (-50) وموجب (+50)"
+              >
+                ${player.input.queensDoubledPos ? '➕ موجب' : '➖ سالب'}
+              </button>
+            </div>
             <div class="counter-control mini-counter">
               <button type="button" class="counter-btn" data-action="dec" data-contract="queensDoubled" ${qDoubled <= 0 ? 'disabled' : ''}>−</button>
               <span class="counter-value ${qDoubled > 0 ? 'has-value' : ''}">${qDoubled}</span>
@@ -444,6 +470,16 @@ function createPlayerColumnDOM(player, roundScore) {
       renderBoard();
     });
   });
+
+  // Doubled Queens Positive/Negative Toggle Button Listener
+  const queenPosToggleBtn = column.querySelector('.queen-pos-toggle-btn');
+  if (queenPosToggleBtn) {
+    queenPosToggleBtn.addEventListener('click', () => {
+      player.input.queensDoubledPos = !player.input.queensDoubledPos;
+      saveState();
+      renderBoard();
+    });
+  }
 
   // King State Buttons Listener (none / normal / doubled / posDouble)
   column.querySelectorAll('.king-state-btn').forEach(btn => {
@@ -680,6 +716,7 @@ function loadSavedState() {
             input: {
               queensNormal: p.input?.queensNormal || 0,
               queensDoubled: p.input?.queensDoubled || 0,
+              queensDoubledPos: p.input?.queensDoubledPos || false,
               kingState: (p.input?.kingState === 'posDouble' || p.input?.kingState === 'doubled' || p.input?.kingState === 'normal') ? p.input.kingState : 'none',
               diamonds: p.input?.diamonds || 0,
               tricks: p.input?.tricks || 0,

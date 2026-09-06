@@ -560,11 +560,43 @@ body {
   border-radius: var(--radius-sm);
 }
 
-.sub-counter-label {
-  font-size: 0.73rem;
-  font-weight: 700;
+.sub-counter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 4px;
+}
+
+.sub-counter-box.is-pos-mode {
+  border-color: var(--positive-border);
+  background: rgba(16, 185, 129, 0.06);
+}
+
+.queen-pos-toggle-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
   color: var(--text-secondary);
+  font-family: var(--font-main);
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
   white-space: nowrap;
+}
+
+.queen-pos-toggle-btn:hover {
+  border-color: var(--positive-border);
+  color: var(--text-primary);
+}
+
+.queen-pos-toggle-btn.active {
+  background: var(--positive-bg);
+  border-color: var(--positive-border);
+  color: var(--positive-color);
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.3);
 }
 
 .mini-counter {
@@ -573,6 +605,7 @@ body {
 }
 
 /* King of Hearts 4-State Selector */
+
 
 .king-state-selector {
   display: grid;
