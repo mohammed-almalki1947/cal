@@ -4,7 +4,7 @@
  */
 
 // Version marker for automatic LocalStorage state migration
-const APP_VERSION = 6;
+const APP_VERSION = 8;
 
 // Helper to get clean default input object per player
 function getDefaultInput() {
@@ -222,6 +222,11 @@ function createPlayerColumnDOM(player, roundScore) {
   // Trix ranks to display based on player count
   const availableRanks = TRIX_RANKS.slice(0, state.playerCount);
 
+  // Combined Queens points
+  const qNormal = player.input.queensNormal || 0;
+  const qDoubled = player.input.queensDoubled || 0;
+  const totalQueensPts = (qNormal * -25) + (qDoubled * -50);
+
   // King points for header tag
   let kingScoreTag = '0';
   let kingTagClass = '';
@@ -257,52 +262,47 @@ function createPlayerColumnDOM(player, roundScore) {
       <div class="round-preview-badge ${previewClass}">الجولة الحالية: ${previewText}</div>
     </div>
 
-    <!-- 6 Contract Inputs List -->
+    <!-- 5 Contract Inputs List -->
     <div class="contract-list">
       
-      <!-- 1. البنات العادية (-25) -->
-      <div class="contract-item">
+      <!-- 1. البنات (مدمجة: عادية ومدبلة) -->
+      <div class="contract-item merged-queens-item">
         <div class="contract-item-header">
           <div class="contract-title-group">
             <span class="contract-icon icon-queens">👑</span>
             <div>
-              <span class="contract-name">بنات عادية</span>
-              <span class="contract-multiplier">(-25)</span>
+              <span class="contract-name">البنات</span>
             </div>
           </div>
-          <span class="contract-score-tag ${(player.input.queensNormal || 0) > 0 ? 'active-negative' : ''}">
-            ${(player.input.queensNormal || 0) * -25}
+          <span class="contract-score-tag ${totalQueensPts < 0 ? 'active-negative' : ''}">
+            ${totalQueensPts}
           </span>
         </div>
-        <div class="counter-control">
-          <button type="button" class="counter-btn" data-action="dec" data-contract="queensNormal" ${(player.input.queensNormal || 0) <= 0 ? 'disabled' : ''}>−</button>
-          <span class="counter-value ${(player.input.queensNormal || 0) > 0 ? 'has-value' : ''}">${player.input.queensNormal || 0}</span>
-          <button type="button" class="counter-btn" data-action="inc" data-contract="queensNormal" ${(player.input.queensNormal || 0) >= 4 ? 'disabled' : ''}>+</button>
+
+        <div class="sub-counters-grid">
+          <!-- عادية (-25) -->
+          <div class="sub-counter-box">
+            <span class="sub-counter-label">عادية (-25)</span>
+            <div class="counter-control mini-counter">
+              <button type="button" class="counter-btn" data-action="dec" data-contract="queensNormal" ${qNormal <= 0 ? 'disabled' : ''}>−</button>
+              <span class="counter-value ${qNormal > 0 ? 'has-value' : ''}">${qNormal}</span>
+              <button type="button" class="counter-btn" data-action="inc" data-contract="queensNormal" ${qNormal >= 4 ? 'disabled' : ''}>+</button>
+            </div>
+          </div>
+
+          <!-- مدبلة (-50) -->
+          <div class="sub-counter-box">
+            <span class="sub-counter-label">مدبلة (-50)</span>
+            <div class="counter-control mini-counter">
+              <button type="button" class="counter-btn" data-action="dec" data-contract="queensDoubled" ${qDoubled <= 0 ? 'disabled' : ''}>−</button>
+              <span class="counter-value ${qDoubled > 0 ? 'has-value' : ''}">${qDoubled}</span>
+              <button type="button" class="counter-btn" data-action="inc" data-contract="queensDoubled" ${qDoubled >= 4 ? 'disabled' : ''}>+</button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- 2. البنات المدبلة (-50) -->
-      <div class="contract-item">
-        <div class="contract-item-header">
-          <div class="contract-title-group">
-            <span class="contract-icon icon-queens-doubled">🔥</span>
-            <div>
-              <span class="contract-name">بنات مدبلة</span>
-              <span class="contract-multiplier">(-50)</span>
-            </div>
-          </div>
-          <span class="contract-score-tag ${(player.input.queensDoubled || 0) > 0 ? 'active-negative' : ''}">
-            ${(player.input.queensDoubled || 0) * -50}
-          </span>
-        </div>
-        <div class="counter-control">
-          <button type="button" class="counter-btn" data-action="dec" data-contract="queensDoubled" ${(player.input.queensDoubled || 0) <= 0 ? 'disabled' : ''}>−</button>
-          <span class="counter-value ${(player.input.queensDoubled || 0) > 0 ? 'has-value' : ''}">${player.input.queensDoubled || 0}</span>
-          <button type="button" class="counter-btn" data-action="inc" data-contract="queensDoubled" ${(player.input.queensDoubled || 0) >= 4 ? 'disabled' : ''}>+</button>
-        </div>
-      </div>
-
-      <!-- 3. شايب الهاص (4 خيارات: 0 / -75 / -150 / +150) -->
+      <!-- 2. شايب الهاص (4 خيارات) -->
       <div class="contract-item">
         <div class="contract-item-header">
           <div class="contract-title-group">
@@ -332,7 +332,7 @@ function createPlayerColumnDOM(player, roundScore) {
         </div>
       </div>
 
-      <!-- 4. الديمن (-10) -->
+      <!-- 3. الديمن (-10) -->
       <div class="contract-item">
         <div class="contract-item-header">
           <div class="contract-title-group">
@@ -353,7 +353,7 @@ function createPlayerColumnDOM(player, roundScore) {
         </div>
       </div>
 
-      <!-- 5. الأكلات (-10) -->
+      <!-- 4. الأكلات (-10) -->
       <div class="contract-item">
         <div class="contract-item-header">
           <div class="contract-title-group">
@@ -374,7 +374,7 @@ function createPlayerColumnDOM(player, roundScore) {
         </div>
       </div>
 
-      <!-- 6. التريكس (المراكز) -->
+      <!-- 5. التريكس (المراكز) -->
       <div class="contract-item">
         <div class="contract-item-header">
           <div class="contract-title-group">
@@ -675,7 +675,6 @@ function loadSavedState() {
       if (parsed.players && Array.isArray(parsed.players)) {
         state.playerCount = parsed.playerCount || 4;
         state.players = parsed.players.map(p => {
-          // Clean input object and sanitize any legacy positiveDouble field from old sessions
           return {
             ...p,
             input: {

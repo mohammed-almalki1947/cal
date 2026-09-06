@@ -541,7 +541,39 @@ body {
   color: var(--gold-accent);
 }
 
+/* Merged Queens Sub-Counters Grid */
+.sub-counters-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  width: 100%;
+}
+
+.sub-counter-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  padding: 6px 4px;
+  border-radius: var(--radius-sm);
+}
+
+.sub-counter-label {
+  font-size: 0.73rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.mini-counter {
+  width: 100%;
+  padding: 2px;
+}
+
 /* King of Hearts 4-State Selector */
+
 .king-state-selector {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
