@@ -8,11 +8,10 @@ function getDefaultInput() {
   return {
     queensNormal: 0,    // البنات العادية (-25)
     queensDoubled: 0,   // البنات المدبلة (-50)
-    kingState: 'none',  // 'none' (0), 'normal' (-75), 'doubled' (-150)
+    kingState: 'none',  // 'none' (0), 'normal' (-75), 'doubled' (-150), 'posDouble' (+150)
     diamonds: 0,        // الديمن (-10)
     tricks: 0,          // الأكلات (-10)
-    trixRank: null,     // 1 (+200), 2 (+150), 3 (+100), 4 (+50)
-    positiveDouble: 0   // دبل بالموجب (+X)
+    trixRank: null      // 1 (+200), 2 (+150), 3 (+100), 4 (+50)
   };
 }
 
@@ -153,6 +152,7 @@ function calculatePlayerRoundScore(input) {
   let kingPts = 0;
   if (input.kingState === 'normal') kingPts = -75;
   else if (input.kingState === 'doubled') kingPts = -150;
+  else if (input.kingState === 'posDouble') kingPts = 150;
 
   const diamondsPts = (input.diamonds || 0) * -10;
   const tricksPts = (input.tricks || 0) * -10;
@@ -163,9 +163,7 @@ function calculatePlayerRoundScore(input) {
     if (rankObj) trixPts = rankObj.points;
   }
 
-  const positiveDoublePts = input.positiveDouble || 0;
-
-  return queensNormalPts + queensDoubledPts + kingPts + diamondsPts + tricksPts + trixPts + positiveDoublePts;
+  return queensNormalPts + queensDoubledPts + kingPts + diamondsPts + tricksPts + trixPts;
 }
 
 // Find which OTHER player has taken a rank (returns player object or null)
@@ -221,9 +219,18 @@ function createPlayerColumnDOM(player, roundScore) {
   const availableRanks = TRIX_RANKS.slice(0, state.playerCount);
 
   // King points for header tag
-  let kingScoreTag = 0;
-  if (player.input.kingState === 'normal') kingScoreTag = -75;
-  else if (player.input.kingState === 'doubled') kingScoreTag = -150;
+  let kingScoreTag = '0';
+  let kingTagClass = '';
+  if (player.input.kingState === 'normal') {
+    kingScoreTag = '-75';
+    kingTagClass = 'active-negative';
+  } else if (player.input.kingState === 'doubled') {
+    kingScoreTag = '-150';
+    kingTagClass = 'active-negative';
+  } else if (player.input.kingState === 'posDouble') {
+    kingScoreTag = '+150';
+    kingTagClass = 'active-positive';
+  }
 
   column.innerHTML = `
     <!-- Player Name Header -->
@@ -246,7 +253,7 @@ function createPlayerColumnDOM(player, roundScore) {
       <div class="round-preview-badge ${previewClass}">الجولة الحالية: ${previewText}</div>
     </div>
 
-    <!-- 7 Contract Inputs List -->
+    <!-- 6 Contract Inputs List -->
     <div class="contract-list">
       
       <!-- 1. البنات العادية (-25) -->
@@ -259,7 +266,7 @@ function createPlayerColumnDOM(player, roundScore) {
               <span class="contract-multiplier">(-25)</span>
             </div>
           </div>
-          <span class="contract-score-tag ${player.input.queensNormal > 0 ? 'active-negative' : ''}">
+          <span class="contract-score-tag ${(player.input.queensNormal || 0) > 0 ? 'active-negative' : ''}">
             ${(player.input.queensNormal || 0) * -25}
           </span>
         </div>
@@ -291,7 +298,7 @@ function createPlayerColumnDOM(player, roundScore) {
         </div>
       </div>
 
-      <!-- 3. شايب الهاص (عادي -75 أو مدبل -150) -->
+      <!-- 3. شايب الهاص (4 خيارات: 0 / -75 / -150 / +150) -->
       <div class="contract-item">
         <div class="contract-item-header">
           <div class="contract-title-group">
@@ -300,7 +307,7 @@ function createPlayerColumnDOM(player, roundScore) {
               <span class="contract-name">شايب الهاص</span>
             </div>
           </div>
-          <span class="contract-score-tag ${kingScoreTag < 0 ? 'active-negative' : ''}">
+          <span class="contract-score-tag ${kingTagClass}">
             ${kingScoreTag}
           </span>
         </div>
@@ -314,6 +321,9 @@ function createPlayerColumnDOM(player, roundScore) {
           </button>
           <button type="button" class="king-state-btn ${player.input.kingState === 'doubled' ? 'active' : ''}" data-king-state="doubled">
             مدبل (-150)
+          </button>
+          <button type="button" class="king-state-btn ${player.input.kingState === 'posDouble' ? 'active' : ''}" data-king-state="posDouble">
+            دبل موجب (+150)
           </button>
         </div>
       </div>
@@ -398,34 +408,6 @@ function createPlayerColumnDOM(player, roundScore) {
         </div>
       </div>
 
-      <!-- 7. دبل بالموجب (+X) -->
-      <div class="contract-item">
-        <div class="contract-item-header">
-          <div class="contract-title-group">
-            <span class="contract-icon icon-pos-double">✨</span>
-            <div>
-              <span class="contract-name">دبل بالموجب</span>
-              <span class="contract-multiplier">(نقاط لك)</span>
-            </div>
-          </div>
-          <span class="contract-score-tag ${(player.input.positiveDouble || 0) > 0 ? 'active-positive' : ''}">
-            +${player.input.positiveDouble || 0}
-          </span>
-        </div>
-
-        <div class="counter-control">
-          <button type="button" class="counter-btn" data-action="dec-pos-double" ${(player.input.positiveDouble || 0) <= 0 ? 'disabled' : ''}>−</button>
-          <span class="counter-value ${(player.input.positiveDouble || 0) > 0 ? 'has-value' : ''}">${player.input.positiveDouble || 0}</span>
-          <button type="button" class="counter-btn" data-action="inc-pos-double">+</button>
-        </div>
-
-        <div class="pos-preset-grid">
-          <button type="button" class="preset-btn" data-add-pos="50">+50</button>
-          <button type="button" class="preset-btn" data-add-pos="75">+75</button>
-          <button type="button" class="preset-btn" data-add-pos="150">+150</button>
-        </div>
-      </div>
-
     </div>
   `;
 
@@ -437,7 +419,7 @@ function createPlayerColumnDOM(player, roundScore) {
     renderHistory();
   });
 
-  // Counter Buttons Event Listener (normal/doubled queens, diamonds, tricks)
+  // Counter Buttons Event Listener
   column.querySelectorAll('.counter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const action = btn.dataset.action;
@@ -452,14 +434,6 @@ function createPlayerColumnDOM(player, roundScore) {
         if ((player.input[contract] || 0) > 0) {
           player.input[contract] = (player.input[contract] || 0) - 1;
         }
-      } else if (action === 'inc-pos-double') {
-        player.input.positiveDouble = (player.input.positiveDouble || 0) + 25;
-      } else if (action === 'dec-pos-double') {
-        if ((player.input.positiveDouble || 0) >= 25) {
-          player.input.positiveDouble = (player.input.positiveDouble || 0) - 25;
-        } else {
-          player.input.positiveDouble = 0;
-        }
       }
 
       saveState();
@@ -467,25 +441,13 @@ function createPlayerColumnDOM(player, roundScore) {
     });
   });
 
-  // King State Buttons Listener (none / normal / doubled)
+  // King State Buttons Listener (none / normal / doubled / posDouble)
   column.querySelectorAll('.king-state-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const targetState = btn.dataset.kingState;
       player.input.kingState = targetState;
       saveState();
       renderBoard();
-    });
-  });
-
-  // Positive Double Preset Buttons (+50, +75, +150)
-  column.querySelectorAll('.preset-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const addVal = parseInt(btn.dataset.addPos, 10);
-      if (addVal) {
-        player.input.positiveDouble = (player.input.positiveDouble || 0) + addVal;
-        saveState();
-        renderBoard();
-      }
     });
   });
 
@@ -717,8 +679,7 @@ function loadSavedState() {
               kingState: p.input?.kingState || (p.input?.king === 1 ? (p.input?.kingDouble ? 'doubled' : 'normal') : 'none'),
               diamonds: p.input?.diamonds || 0,
               tricks: p.input?.tricks || 0,
-              trixRank: p.input?.trixRank || null,
-              positiveDouble: p.input?.positiveDouble || 0
+              trixRank: p.input?.trixRank || null
             }
           };
         });

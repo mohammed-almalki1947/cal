@@ -541,10 +541,10 @@ body {
   color: var(--gold-accent);
 }
 
-/* King of Hearts 3-State Selector */
+/* King of Hearts 4-State Selector */
 .king-state-selector {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 4px;
   width: 100%;
 }
@@ -587,6 +587,14 @@ body {
   color: #fca5a5;
   box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
 }
+
+.king-state-btn.active[data-king-state="posDouble"] {
+  background: var(--positive-bg);
+  border-color: var(--positive-border);
+  color: var(--positive-color);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
 
 /* Positive Double Presets Grid */
 .pos-preset-grid {
