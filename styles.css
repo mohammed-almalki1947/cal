@@ -445,10 +445,13 @@ body {
 }
 
 .icon-queens { background: rgba(244, 63, 94, 0.15); color: #f43f5e; }
+.icon-queens-doubled { background: rgba(239, 68, 68, 0.25); color: #fb7185; }
 .icon-king { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
 .icon-diamonds { background: rgba(249, 115, 22, 0.15); color: #f97316; }
 .icon-tricks { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
 .icon-trix { background: var(--gold-bg); color: var(--gold-accent); }
+.icon-pos-double { background: var(--positive-bg); color: var(--positive-color); }
+
 
 .contract-name {
   font-size: 0.95rem;
@@ -538,66 +541,86 @@ body {
   color: var(--gold-accent);
 }
 
-/* King of Hearts Controls & Double Button */
-.king-controls-wrapper {
-  display: flex;
-  gap: 8px;
-  align-items: center;
+/* King of Hearts 3-State Selector */
+.king-state-selector {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
   width: 100%;
 }
 
-.king-toggle-btn {
-  flex: 1;
-  padding: 10px;
+.king-state-btn {
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
   color: var(--text-secondary);
+  padding: 8px 4px;
   border-radius: var(--radius-sm);
   font-family: var(--font-main);
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
+  text-align: center;
   white-space: nowrap;
 }
 
-.king-toggle-btn.active {
-  background: var(--negative-bg);
-  color: var(--negative-color);
-  border-color: var(--negative-border);
-  box-shadow: 0 0 10px rgba(244, 63, 94, 0.2);
-}
-
-.double-toggle-btn {
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  padding: 10px 12px;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-main);
-  font-size: 0.85rem;
-  font-weight: 800;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s ease;
-  user-select: none;
-}
-
-.double-toggle-btn:hover {
-  border-color: var(--gold-accent);
+.king-state-btn:hover {
+  border-color: var(--border-active);
   color: var(--text-primary);
 }
 
-.double-toggle-btn.active {
-  background: var(--gold-bg);
-  border-color: var(--gold-accent);
-  color: var(--gold-accent);
-  box-shadow: 0 0 10px rgba(251, 191, 36, 0.3);
+.king-state-btn.active[data-king-state="none"] {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: var(--text-primary);
 }
+
+.king-state-btn.active[data-king-state="normal"] {
+  background: var(--negative-bg);
+  border-color: var(--negative-border);
+  color: var(--negative-color);
+}
+
+.king-state-btn.active[data-king-state="doubled"] {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
+  color: #fca5a5;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+}
+
+/* Positive Double Presets Grid */
+.pos-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.preset-btn {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--positive-color);
+  padding: 6px 2px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-main);
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.preset-btn:hover {
+  background: var(--positive-bg);
+  border-color: var(--positive-border);
+}
+
+.preset-btn:active {
+  transform: scale(0.95);
+}
+
 
 
 /* Trix Rank Selector Grid */

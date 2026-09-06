@@ -3,14 +3,27 @@
  * Pure Vanilla JavaScript implementation with full state management & LocalStorage persistence.
  */
 
+// Helper to get clean default input object per player
+function getDefaultInput() {
+  return {
+    queensNormal: 0,    // البنات العادية (-25)
+    queensDoubled: 0,   // البنات المدبلة (-50)
+    kingState: 'none',  // 'none' (0), 'normal' (-75), 'doubled' (-150)
+    diamonds: 0,        // الديمن (-10)
+    tricks: 0,          // الأكلات (-10)
+    trixRank: null,     // 1 (+200), 2 (+150), 3 (+100), 4 (+50)
+    positiveDouble: 0   // دبل بالموجب (+X)
+  };
+}
+
 // Global State
 const state = {
   playerCount: 4, // 3 or 4
   players: [
-    { id: 1, name: 'لاعب 1', totalScore: 0, input: { queens: 0, king: 0, kingDouble: false, diamonds: 0, tricks: 0, trixRank: null } },
-    { id: 2, name: 'لاعب 2', totalScore: 0, input: { queens: 0, king: 0, kingDouble: false, diamonds: 0, tricks: 0, trixRank: null } },
-    { id: 3, name: 'لاعب 3', totalScore: 0, input: { queens: 0, king: 0, kingDouble: false, diamonds: 0, tricks: 0, trixRank: null } },
-    { id: 4, name: 'لاعب 4', totalScore: 0, input: { queens: 0, king: 0, kingDouble: false, diamonds: 0, tricks: 0, trixRank: null } }
+    { id: 1, name: 'لاعب 1', totalScore: 0, input: getDefaultInput() },
+    { id: 2, name: 'لاعب 2', totalScore: 0, input: getDefaultInput() },
+    { id: 3, name: 'لاعب 3', totalScore: 0, input: getDefaultInput() },
+    { id: 4, name: 'لاعب 4', totalScore: 0, input: getDefaultInput() }
   ],
   history: []
 };
@@ -134,20 +147,25 @@ function setPlayerCount(count) {
 
 // Helper to calculate round score for a given player input
 function calculatePlayerRoundScore(input) {
-  const queensPoints = input.queens * -25;
-  const kingValue = input.kingDouble ? -150 : -75;
-  const kingPoints = input.king * kingValue;
+  const queensNormalPts = (input.queensNormal || 0) * -25;
+  const queensDoubledPts = (input.queensDoubled || 0) * -50;
 
-  const diamondsPoints = input.diamonds * -10;
-  const tricksPoints = input.tricks * -10;
+  let kingPts = 0;
+  if (input.kingState === 'normal') kingPts = -75;
+  else if (input.kingState === 'doubled') kingPts = -150;
+
+  const diamondsPts = (input.diamonds || 0) * -10;
+  const tricksPts = (input.tricks || 0) * -10;
   
-  let trixPoints = 0;
+  let trixPts = 0;
   if (input.trixRank) {
     const rankObj = TRIX_RANKS.find(r => r.rank === input.trixRank);
-    if (rankObj) trixPoints = rankObj.points;
+    if (rankObj) trixPts = rankObj.points;
   }
 
-  return queensPoints + kingPoints + diamondsPoints + tricksPoints + trixPoints;
+  const positiveDoublePts = input.positiveDouble || 0;
+
+  return queensNormalPts + queensDoubledPts + kingPts + diamondsPts + tricksPts + trixPts + positiveDoublePts;
 }
 
 // Find which OTHER player has taken a rank (returns player object or null)
@@ -201,7 +219,11 @@ function createPlayerColumnDOM(player, roundScore) {
 
   // Trix ranks to display based on player count
   const availableRanks = TRIX_RANKS.slice(0, state.playerCount);
-  const kingValue = player.input.kingDouble ? -150 : -75;
+
+  // King points for header tag
+  let kingScoreTag = 0;
+  if (player.input.kingState === 'normal') kingScoreTag = -75;
+  else if (player.input.kingState === 'doubled') kingScoreTag = -150;
 
   column.innerHTML = `
     <!-- Player Name Header -->
@@ -224,56 +246,79 @@ function createPlayerColumnDOM(player, roundScore) {
       <div class="round-preview-badge ${previewClass}">الجولة الحالية: ${previewText}</div>
     </div>
 
-    <!-- 5 Contract Inputs List -->
+    <!-- 7 Contract Inputs List -->
     <div class="contract-list">
-      <!-- 1. البنات (-25) -->
+      
+      <!-- 1. البنات العادية (-25) -->
       <div class="contract-item">
         <div class="contract-item-header">
           <div class="contract-title-group">
             <span class="contract-icon icon-queens">👑</span>
             <div>
-              <span class="contract-name">البنات</span>
+              <span class="contract-name">بنات عادية</span>
               <span class="contract-multiplier">(-25)</span>
             </div>
           </div>
-          <span class="contract-score-tag ${player.input.queens > 0 ? 'active-negative' : ''}">
-            ${player.input.queens * -25}
+          <span class="contract-score-tag ${player.input.queensNormal > 0 ? 'active-negative' : ''}">
+            ${(player.input.queensNormal || 0) * -25}
           </span>
         </div>
         <div class="counter-control">
-          <button type="button" class="counter-btn" data-action="dec" data-contract="queens" ${player.input.queens <= 0 ? 'disabled' : ''}>−</button>
-          <span class="counter-value ${player.input.queens > 0 ? 'has-value' : ''}">${player.input.queens}</span>
-          <button type="button" class="counter-btn" data-action="inc" data-contract="queens" ${player.input.queens >= 4 ? 'disabled' : ''}>+</button>
+          <button type="button" class="counter-btn" data-action="dec" data-contract="queensNormal" ${(player.input.queensNormal || 0) <= 0 ? 'disabled' : ''}>−</button>
+          <span class="counter-value ${(player.input.queensNormal || 0) > 0 ? 'has-value' : ''}">${player.input.queensNormal || 0}</span>
+          <button type="button" class="counter-btn" data-action="inc" data-contract="queensNormal" ${(player.input.queensNormal || 0) >= 4 ? 'disabled' : ''}>+</button>
         </div>
       </div>
 
-      <!-- 2. شايب الهاص (-75 أو -150 دبل) -->
+      <!-- 2. البنات المدبلة (-50) -->
+      <div class="contract-item">
+        <div class="contract-item-header">
+          <div class="contract-title-group">
+            <span class="contract-icon icon-queens-doubled">🔥</span>
+            <div>
+              <span class="contract-name">بنات مدبلة</span>
+              <span class="contract-multiplier">(-50)</span>
+            </div>
+          </div>
+          <span class="contract-score-tag ${(player.input.queensDoubled || 0) > 0 ? 'active-negative' : ''}">
+            ${(player.input.queensDoubled || 0) * -50}
+          </span>
+        </div>
+        <div class="counter-control">
+          <button type="button" class="counter-btn" data-action="dec" data-contract="queensDoubled" ${(player.input.queensDoubled || 0) <= 0 ? 'disabled' : ''}>−</button>
+          <span class="counter-value ${(player.input.queensDoubled || 0) > 0 ? 'has-value' : ''}">${player.input.queensDoubled || 0}</span>
+          <button type="button" class="counter-btn" data-action="inc" data-contract="queensDoubled" ${(player.input.queensDoubled || 0) >= 4 ? 'disabled' : ''}>+</button>
+        </div>
+      </div>
+
+      <!-- 3. شايب الهاص (عادي -75 أو مدبل -150) -->
       <div class="contract-item">
         <div class="contract-item-header">
           <div class="contract-title-group">
             <span class="contract-icon icon-king">♥️</span>
             <div>
               <span class="contract-name">شايب الهاص</span>
-              <span class="contract-multiplier">(${kingValue})</span>
             </div>
           </div>
-          <span class="contract-score-tag ${player.input.king > 0 ? 'active-negative' : ''}">
-            ${player.input.king * kingValue}
+          <span class="contract-score-tag ${kingScoreTag < 0 ? 'active-negative' : ''}">
+            ${kingScoreTag}
           </span>
         </div>
         
-        <div class="king-controls-wrapper">
-          <button type="button" class="king-toggle-btn ${player.input.king === 1 ? 'active' : ''}" data-action="toggle-king">
-            ${player.input.king === 1 ? `✓ تم الأكل (${kingValue})` : 'لم يأكل (0)'}
+        <div class="king-state-selector">
+          <button type="button" class="king-state-btn ${player.input.kingState === 'none' ? 'active' : ''}" data-king-state="none">
+            لم يأكل (0)
           </button>
-          
-          <button type="button" class="double-toggle-btn ${player.input.kingDouble ? 'active' : ''}" data-action="toggle-king-double" title="تفعيل الدبل (-150 نقطة)">
-            ${player.input.kingDouble ? '⚡ دبل x2' : 'دبل x2'}
+          <button type="button" class="king-state-btn ${player.input.kingState === 'normal' ? 'active' : ''}" data-king-state="normal">
+            عادي (-75)
+          </button>
+          <button type="button" class="king-state-btn ${player.input.kingState === 'doubled' ? 'active' : ''}" data-king-state="doubled">
+            مدبل (-150)
           </button>
         </div>
       </div>
 
-      <!-- 3. الديمن (-10) -->
+      <!-- 4. الديمن (-10) -->
       <div class="contract-item">
         <div class="contract-item-header">
           <div class="contract-title-group">
@@ -283,18 +328,18 @@ function createPlayerColumnDOM(player, roundScore) {
               <span class="contract-multiplier">(-10)</span>
             </div>
           </div>
-          <span class="contract-score-tag ${player.input.diamonds > 0 ? 'active-negative' : ''}">
-            ${player.input.diamonds * -10}
+          <span class="contract-score-tag ${(player.input.diamonds || 0) > 0 ? 'active-negative' : ''}">
+            ${(player.input.diamonds || 0) * -10}
           </span>
         </div>
         <div class="counter-control">
-          <button type="button" class="counter-btn" data-action="dec" data-contract="diamonds" ${player.input.diamonds <= 0 ? 'disabled' : ''}>−</button>
-          <span class="counter-value ${player.input.diamonds > 0 ? 'has-value' : ''}">${player.input.diamonds}</span>
-          <button type="button" class="counter-btn" data-action="inc" data-contract="diamonds" ${player.input.diamonds >= 13 ? 'disabled' : ''}>+</button>
+          <button type="button" class="counter-btn" data-action="dec" data-contract="diamonds" ${(player.input.diamonds || 0) <= 0 ? 'disabled' : ''}>−</button>
+          <span class="counter-value ${(player.input.diamonds || 0) > 0 ? 'has-value' : ''}">${player.input.diamonds || 0}</span>
+          <button type="button" class="counter-btn" data-action="inc" data-contract="diamonds" ${(player.input.diamonds || 0) >= 13 ? 'disabled' : ''}>+</button>
         </div>
       </div>
 
-      <!-- 4. الأكلات (-10) -->
+      <!-- 5. الأكلات (-10) -->
       <div class="contract-item">
         <div class="contract-item-header">
           <div class="contract-title-group">
@@ -304,18 +349,18 @@ function createPlayerColumnDOM(player, roundScore) {
               <span class="contract-multiplier">(-10)</span>
             </div>
           </div>
-          <span class="contract-score-tag ${player.input.tricks > 0 ? 'active-negative' : ''}">
-            ${player.input.tricks * -10}
+          <span class="contract-score-tag ${(player.input.tricks || 0) > 0 ? 'active-negative' : ''}">
+            ${(player.input.tricks || 0) * -10}
           </span>
         </div>
         <div class="counter-control">
-          <button type="button" class="counter-btn" data-action="dec" data-contract="tricks" ${player.input.tricks <= 0 ? 'disabled' : ''}>−</button>
-          <span class="counter-value ${player.input.tricks > 0 ? 'has-value' : ''}">${player.input.tricks}</span>
-          <button type="button" class="counter-btn" data-action="inc" data-contract="tricks" ${player.input.tricks >= 13 ? 'disabled' : ''}>+</button>
+          <button type="button" class="counter-btn" data-action="dec" data-contract="tricks" ${(player.input.tricks || 0) <= 0 ? 'disabled' : ''}>−</button>
+          <span class="counter-value ${(player.input.tricks || 0) > 0 ? 'has-value' : ''}">${player.input.tricks || 0}</span>
+          <button type="button" class="counter-btn" data-action="inc" data-contract="tricks" ${(player.input.tricks || 0) >= 13 ? 'disabled' : ''}>+</button>
         </div>
       </div>
 
-      <!-- 5. التريكس (المراكز) -->
+      <!-- 6. التريكس (المراكز) -->
       <div class="contract-item">
         <div class="contract-item-header">
           <div class="contract-title-group">
@@ -352,6 +397,35 @@ function createPlayerColumnDOM(player, roundScore) {
           }).join('')}
         </div>
       </div>
+
+      <!-- 7. دبل بالموجب (+X) -->
+      <div class="contract-item">
+        <div class="contract-item-header">
+          <div class="contract-title-group">
+            <span class="contract-icon icon-pos-double">✨</span>
+            <div>
+              <span class="contract-name">دبل بالموجب</span>
+              <span class="contract-multiplier">(نقاط لك)</span>
+            </div>
+          </div>
+          <span class="contract-score-tag ${(player.input.positiveDouble || 0) > 0 ? 'active-positive' : ''}">
+            +${player.input.positiveDouble || 0}
+          </span>
+        </div>
+
+        <div class="counter-control">
+          <button type="button" class="counter-btn" data-action="dec-pos-double" ${(player.input.positiveDouble || 0) <= 0 ? 'disabled' : ''}>−</button>
+          <span class="counter-value ${(player.input.positiveDouble || 0) > 0 ? 'has-value' : ''}">${player.input.positiveDouble || 0}</span>
+          <button type="button" class="counter-btn" data-action="inc-pos-double">+</button>
+        </div>
+
+        <div class="pos-preset-grid">
+          <button type="button" class="preset-btn" data-add-pos="50">+50</button>
+          <button type="button" class="preset-btn" data-add-pos="75">+75</button>
+          <button type="button" class="preset-btn" data-add-pos="150">+150</button>
+        </div>
+      </div>
+
     </div>
   `;
 
@@ -363,18 +437,29 @@ function createPlayerColumnDOM(player, roundScore) {
     renderHistory();
   });
 
-  // Counter Buttons Event Listener
+  // Counter Buttons Event Listener (normal/doubled queens, diamonds, tricks)
   column.querySelectorAll('.counter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const action = btn.dataset.action;
       const contract = btn.dataset.contract;
-      if (!contract) return;
 
-      if (action === 'inc') {
-        const max = contract === 'queens' ? 4 : 13;
-        if (player.input[contract] < max) player.input[contract]++;
-      } else if (action === 'dec') {
-        if (player.input[contract] > 0) player.input[contract]--;
+      if (action === 'inc' && contract) {
+        const max = (contract === 'queensNormal' || contract === 'queensDoubled') ? 4 : 13;
+        if ((player.input[contract] || 0) < max) {
+          player.input[contract] = (player.input[contract] || 0) + 1;
+        }
+      } else if (action === 'dec' && contract) {
+        if ((player.input[contract] || 0) > 0) {
+          player.input[contract] = (player.input[contract] || 0) - 1;
+        }
+      } else if (action === 'inc-pos-double') {
+        player.input.positiveDouble = (player.input.positiveDouble || 0) + 25;
+      } else if (action === 'dec-pos-double') {
+        if ((player.input.positiveDouble || 0) >= 25) {
+          player.input.positiveDouble = (player.input.positiveDouble || 0) - 25;
+        } else {
+          player.input.positiveDouble = 0;
+        }
       }
 
       saveState();
@@ -382,25 +467,27 @@ function createPlayerColumnDOM(player, roundScore) {
     });
   });
 
-  // King Toggle Button Listener
-  const kingBtn = column.querySelector('.king-toggle-btn');
-  if (kingBtn) {
-    kingBtn.addEventListener('click', () => {
-      player.input.king = player.input.king === 1 ? 0 : 1;
+  // King State Buttons Listener (none / normal / doubled)
+  column.querySelectorAll('.king-state-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetState = btn.dataset.kingState;
+      player.input.kingState = targetState;
       saveState();
       renderBoard();
     });
-  }
+  });
 
-  // King Double Toggle Button Listener
-  const kingDoubleBtn = column.querySelector('.double-toggle-btn');
-  if (kingDoubleBtn) {
-    kingDoubleBtn.addEventListener('click', () => {
-      player.input.kingDouble = !player.input.kingDouble;
-      saveState();
-      renderBoard();
+  // Positive Double Preset Buttons (+50, +75, +150)
+  column.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const addVal = parseInt(btn.dataset.addPos, 10);
+      if (addVal) {
+        player.input.positiveDouble = (player.input.positiveDouble || 0) + addVal;
+        saveState();
+        renderBoard();
+      }
     });
-  }
+  });
 
   // Trix Rank Selection Listener
   column.querySelectorAll('.rank-btn').forEach(btn => {
@@ -418,7 +505,7 @@ function createPlayerColumnDOM(player, roundScore) {
       if (player.input.trixRank === rank) {
         player.input.trixRank = null;
       } else {
-        // Otherwise, set rank for THIS player (freely switching from previous selection)
+        // Otherwise, set rank for THIS player
         player.input.trixRank = rank;
       }
 
@@ -450,7 +537,7 @@ function submitRound() {
     roundSnapshot.scores[p.id] = rScore;
 
     // Clear input counters for next round
-    p.input = { queens: 0, king: 0, kingDouble: false, diamonds: 0, tricks: 0, trixRank: null };
+    p.input = getDefaultInput();
   });
 
   state.history.push(roundSnapshot);
@@ -462,7 +549,7 @@ function submitRound() {
 
 function clearCurrentInputs() {
   state.players.forEach(p => {
-    p.input = { queens: 0, king: 0, kingDouble: false, diamonds: 0, tricks: 0, trixRank: null };
+    p.input = getDefaultInput();
   });
   saveState();
   renderBoard();
@@ -502,7 +589,7 @@ function confirmResetAll() {
   state.players.forEach((p, idx) => {
     p.name = `لاعب ${idx + 1}`;
     p.totalScore = 0;
-    p.input = { queens: 0, king: 0, kingDouble: false, diamonds: 0, tricks: 0, trixRank: null };
+    p.input = getDefaultInput();
   });
 
   state.history = [];
@@ -625,12 +712,13 @@ function loadSavedState() {
           return {
             ...p,
             input: {
-              queens: p.input?.queens || 0,
-              king: p.input?.king || 0,
-              kingDouble: p.input?.kingDouble || false,
+              queensNormal: p.input?.queensNormal || (p.input?.queens || 0),
+              queensDoubled: p.input?.queensDoubled || 0,
+              kingState: p.input?.kingState || (p.input?.king === 1 ? (p.input?.kingDouble ? 'doubled' : 'normal') : 'none'),
               diamonds: p.input?.diamonds || 0,
               tricks: p.input?.tricks || 0,
-              trixRank: p.input?.trixRank || null
+              trixRank: p.input?.trixRank || null,
+              positiveDouble: p.input?.positiveDouble || 0
             }
           };
         });
