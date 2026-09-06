@@ -544,19 +544,22 @@ body {
 /* Merged Queens 3 Sub-Counters Grid */
 .sub-counters-grid-3 {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
+  /* Keep each queen counter on its own row.  Player columns can be narrow
+     (especially on phones), so three controls side by side would overflow. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
   width: 100%;
 }
 
 .sub-counter-box {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 4px;
+  justify-content: space-between;
+  gap: 8px;
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
-  padding: 6px 2px;
+  padding: 6px;
   border-radius: var(--radius-sm);
 }
 
@@ -570,6 +573,7 @@ body {
   font-weight: 700;
   color: var(--text-secondary);
   white-space: nowrap;
+  flex: 0 0 auto;
 }
 
 .sub-counter-label.pos-label {
@@ -581,7 +585,8 @@ body {
 }
 
 .mini-counter {
-  width: 100%;
+  width: auto;
+  flex: 1 1 auto;
   padding: 2px;
 }
 
