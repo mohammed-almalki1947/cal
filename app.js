@@ -3,6 +3,9 @@
  * Pure Vanilla JavaScript implementation with full state management & LocalStorage persistence.
  */
 
+// Version marker for automatic LocalStorage state migration
+const APP_VERSION = 6;
+
 // Helper to get clean default input object per player
 function getDefaultInput() {
   return {
@@ -17,6 +20,7 @@ function getDefaultInput() {
 
 // Global State
 const state = {
+  appVersion: APP_VERSION,
   playerCount: 4, // 3 or 4
   players: [
     { id: 1, name: 'لاعب 1', totalScore: 0, input: getDefaultInput() },
@@ -671,12 +675,13 @@ function loadSavedState() {
       if (parsed.players && Array.isArray(parsed.players)) {
         state.playerCount = parsed.playerCount || 4;
         state.players = parsed.players.map(p => {
+          // Clean input object and sanitize any legacy positiveDouble field from old sessions
           return {
             ...p,
             input: {
-              queensNormal: p.input?.queensNormal || (p.input?.queens || 0),
+              queensNormal: p.input?.queensNormal || 0,
               queensDoubled: p.input?.queensDoubled || 0,
-              kingState: p.input?.kingState || (p.input?.king === 1 ? (p.input?.kingDouble ? 'doubled' : 'normal') : 'none'),
+              kingState: (p.input?.kingState === 'posDouble' || p.input?.kingState === 'doubled' || p.input?.kingState === 'normal') ? p.input.kingState : 'none',
               diamonds: p.input?.diamonds || 0,
               tricks: p.input?.tricks || 0,
               trixRank: p.input?.trixRank || null
