@@ -4,18 +4,18 @@
  */
 
 // Version marker for automatic LocalStorage state migration
-const APP_VERSION = 9;
+const APP_VERSION = 10;
 
 // Helper to get clean default input object per player
 function getDefaultInput() {
   return {
-    queensNormal: 0,        // البنات العادية (-25)
-    queensDoubled: 0,       // البنات المدبلة (-50 أو +50 في حال تفعيل الموجب)
-    queensDoubledPos: false,// زر التبديل بين موجب وسالب للبنات المدبلة
-    kingState: 'none',      // 'none' (0), 'normal' (-75), 'doubled' (-150), 'posDouble' (+150)
-    diamonds: 0,            // الديمن (-10)
-    tricks: 0,              // الأكلات (-10)
-    trixRank: null          // 1 (+200), 2 (+150), 3 (+100), 4 (+50)
+    queensNormal: 0,      // البنات العادية (-25)
+    queensDoubled: 0,     // البنات المدبلة (-50)
+    queensDoubledPos: 0,  // البنات المدبلة بالموجب (+50)
+    kingState: 'none',    // 'none' (0), 'normal' (-75), 'doubled' (-150), 'posDouble' (+150)
+    diamonds: 0,          // الديمن (-10)
+    tricks: 0,            // الأكلات (-10)
+    trixRank: null        // 1 (+200), 2 (+150), 3 (+100), 4 (+50)
   };
 }
 
@@ -152,10 +152,8 @@ function setPlayerCount(count) {
 // Helper to calculate round score for a given player input
 function calculatePlayerRoundScore(input) {
   const queensNormalPts = (input.queensNormal || 0) * -25;
-  
-  // Doubled queens: -50 if normal, +50 if positive toggle is enabled
-  const qDoubledMultiplier = input.queensDoubledPos ? 50 : -50;
-  const queensDoubledPts = (input.queensDoubled || 0) * qDoubledMultiplier;
+  const queensDoubledPts = (input.queensDoubled || 0) * -50;
+  const queensDoubledPosPts = (input.queensDoubledPos || 0) * 50;
 
   let kingPts = 0;
   if (input.kingState === 'normal') kingPts = -75;
@@ -171,7 +169,7 @@ function calculatePlayerRoundScore(input) {
     if (rankObj) trixPts = rankObj.points;
   }
 
-  return queensNormalPts + queensDoubledPts + kingPts + diamondsPts + tricksPts + trixPts;
+  return queensNormalPts + queensDoubledPts + queensDoubledPosPts + kingPts + diamondsPts + tricksPts;
 }
 
 // Find which OTHER player has taken a rank (returns player object or null)
@@ -226,11 +224,11 @@ function createPlayerColumnDOM(player, roundScore) {
   // Trix ranks to display based on player count
   const availableRanks = TRIX_RANKS.slice(0, state.playerCount);
 
-  // Combined Queens points
+  // Combined Queens points (Normal -25 + Doubled -50 + PosDoubled +50)
   const qNormal = player.input.queensNormal || 0;
   const qDoubled = player.input.queensDoubled || 0;
-  const qDoubledMult = player.input.queensDoubledPos ? 50 : -50;
-  const totalQueensPts = (qNormal * -25) + (qDoubled * qDoubledMult);
+  const qDoubledPos = player.input.queensDoubledPos || 0;
+  const totalQueensPts = (qNormal * -25) + (qDoubled * -50) + (qDoubledPos * 50);
 
   let queensTagClass = '';
   let formattedQueensPts = `${totalQueensPts}`;
@@ -279,7 +277,7 @@ function createPlayerColumnDOM(player, roundScore) {
     <!-- 5 Contract Inputs List -->
     <div class="contract-list">
       
-      <!-- 1. البنات (عادية + مدبلة مع زر تبديل موجب/سالب) -->
+      <!-- 1. البنات (3 عدادات مربعة صغيرة: عادية -25 ، مدبلة -50 ، موجب +50) -->
       <div class="contract-item merged-queens-item">
         <div class="contract-item-header">
           <div class="contract-title-group">
@@ -293,12 +291,10 @@ function createPlayerColumnDOM(player, roundScore) {
           </span>
         </div>
 
-        <div class="sub-counters-grid">
-          <!-- عادية (-25) -->
+        <div class="sub-counters-grid-3">
+          <!-- 1. عادية (-25) -->
           <div class="sub-counter-box">
-            <div class="sub-counter-header">
-              <span class="sub-counter-label">عادية (-25)</span>
-            </div>
+            <span class="sub-counter-label">عادية (-25)</span>
             <div class="counter-control mini-counter">
               <button type="button" class="counter-btn" data-action="dec" data-contract="queensNormal" ${qNormal <= 0 ? 'disabled' : ''}>−</button>
               <span class="counter-value ${qNormal > 0 ? 'has-value' : ''}">${qNormal}</span>
@@ -306,23 +302,23 @@ function createPlayerColumnDOM(player, roundScore) {
             </div>
           </div>
 
-          <!-- مدبلة (-50 أو +50) -->
-          <div class="sub-counter-box ${player.input.queensDoubledPos ? 'is-pos-mode' : ''}">
-            <div class="sub-counter-header">
-              <span class="sub-counter-label">${player.input.queensDoubledPos ? 'موجب (+50)' : 'مدبلة (-50)'}</span>
-              <button 
-                type="button" 
-                class="queen-pos-toggle-btn ${player.input.queensDoubledPos ? 'active' : ''}" 
-                data-action="toggle-queen-pos"
-                title="تبديل بين سالب (-50) وموجب (+50)"
-              >
-                ${player.input.queensDoubledPos ? '➕ موجب' : '➖ سالب'}
-              </button>
-            </div>
+          <!-- 2. مدبلة (-50) -->
+          <div class="sub-counter-box">
+            <span class="sub-counter-label">مدبلة (-50)</span>
             <div class="counter-control mini-counter">
               <button type="button" class="counter-btn" data-action="dec" data-contract="queensDoubled" ${qDoubled <= 0 ? 'disabled' : ''}>−</button>
               <span class="counter-value ${qDoubled > 0 ? 'has-value' : ''}">${qDoubled}</span>
               <button type="button" class="counter-btn" data-action="inc" data-contract="queensDoubled" ${qDoubled >= 4 ? 'disabled' : ''}>+</button>
+            </div>
+          </div>
+
+          <!-- 3. موجب (+50) -->
+          <div class="sub-counter-box pos-box">
+            <span class="sub-counter-label pos-label">موجب (+50)</span>
+            <div class="counter-control mini-counter">
+              <button type="button" class="counter-btn" data-action="dec" data-contract="queensDoubledPos" ${qDoubledPos <= 0 ? 'disabled' : ''}>−</button>
+              <span class="counter-value ${qDoubledPos > 0 ? 'has-value-pos' : ''}">${qDoubledPos}</span>
+              <button type="button" class="counter-btn" data-action="inc" data-contract="queensDoubledPos" ${qDoubledPos >= 4 ? 'disabled' : ''}>+</button>
             </div>
           </div>
         </div>
@@ -456,7 +452,7 @@ function createPlayerColumnDOM(player, roundScore) {
       const contract = btn.dataset.contract;
 
       if (action === 'inc' && contract) {
-        const max = (contract === 'queensNormal' || contract === 'queensDoubled') ? 4 : 13;
+        const max = (contract === 'queensNormal' || contract === 'queensDoubled' || contract === 'queensDoubledPos') ? 4 : 13;
         if ((player.input[contract] || 0) < max) {
           player.input[contract] = (player.input[contract] || 0) + 1;
         }
@@ -470,16 +466,6 @@ function createPlayerColumnDOM(player, roundScore) {
       renderBoard();
     });
   });
-
-  // Doubled Queens Positive/Negative Toggle Button Listener
-  const queenPosToggleBtn = column.querySelector('.queen-pos-toggle-btn');
-  if (queenPosToggleBtn) {
-    queenPosToggleBtn.addEventListener('click', () => {
-      player.input.queensDoubledPos = !player.input.queensDoubledPos;
-      saveState();
-      renderBoard();
-    });
-  }
 
   // King State Buttons Listener (none / normal / doubled / posDouble)
   column.querySelectorAll('.king-state-btn').forEach(btn => {
@@ -716,7 +702,7 @@ function loadSavedState() {
             input: {
               queensNormal: p.input?.queensNormal || 0,
               queensDoubled: p.input?.queensDoubled || 0,
-              queensDoubledPos: p.input?.queensDoubledPos || false,
+              queensDoubledPos: typeof p.input?.queensDoubledPos === 'number' ? p.input.queensDoubledPos : 0,
               kingState: (p.input?.kingState === 'posDouble' || p.input?.kingState === 'doubled' || p.input?.kingState === 'normal') ? p.input.kingState : 'none',
               diamonds: p.input?.diamonds || 0,
               tricks: p.input?.tricks || 0,
