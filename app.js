@@ -4,7 +4,7 @@
  */
 
 // Version marker for automatic LocalStorage state migration
-const APP_VERSION = 100;
+const APP_VERSION = 200;
 
 // Helper to get clean default input object per player
 function getDefaultInput() {
@@ -254,6 +254,10 @@ function createPlayerColumnDOM(player, roundScore) {
     kingTagClass = 'active-positive';
   }
 
+  const isCustomName = player.name && !(/^لاعب\s*\d+$/.test(player.name.trim()));
+  const displayValue = isCustomName ? player.name : '';
+  const displayPlaceholder = player.name || `لاعب ${player.id}`;
+
   column.innerHTML = `
     <!-- Player Name Header -->
     <div class="player-header">
@@ -261,8 +265,8 @@ function createPlayerColumnDOM(player, roundScore) {
         <input 
           type="text" 
           class="player-name-input" 
-          value="${escapeHtml(player.name)}" 
-          placeholder="اسم اللاعب" 
+          value="${escapeHtml(displayValue)}" 
+          placeholder="${escapeHtml(displayPlaceholder)}" 
           aria-label="اسم اللاعب"
         />
       </div>
