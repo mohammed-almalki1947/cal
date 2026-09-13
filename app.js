@@ -4,7 +4,7 @@
  */
 
 // Version marker for automatic LocalStorage state migration
-const APP_VERSION = 10;
+const APP_VERSION = 11;
 
 // Helper to get clean default input object per player
 function getDefaultInput() {
@@ -169,7 +169,7 @@ function calculatePlayerRoundScore(input) {
     if (rankObj) trixPts = rankObj.points;
   }
 
-  return queensNormalPts + queensDoubledPts + queensDoubledPosPts + kingPts + diamondsPts + tricksPts;
+  return queensNormalPts + queensDoubledPts + queensDoubledPosPts + kingPts + diamondsPts + tricksPts + trixPts;
 }
 
 // Find which OTHER player has taken a rank (returns player object or null)
