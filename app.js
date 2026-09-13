@@ -4,7 +4,7 @@
  */
 
 // Version marker for automatic LocalStorage state migration
-const APP_VERSION = 13;
+const APP_VERSION = 100;
 
 // Helper to get clean default input object per player
 function getDefaultInput() {
