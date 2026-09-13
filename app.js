@@ -4,7 +4,7 @@
  */
 
 // Version marker for automatic LocalStorage state migration
-const APP_VERSION = 11;
+const APP_VERSION = 12;
 
 // Helper to get clean default input object per player
 function getDefaultInput() {
@@ -164,8 +164,9 @@ function calculatePlayerRoundScore(input) {
   const tricksPts = (input.tricks || 0) * -10;
   
   let trixPts = 0;
-  if (input.trixRank) {
-    const rankObj = TRIX_RANKS.find(r => r.rank === input.trixRank);
+  if (input.trixRank !== null && input.trixRank !== undefined && input.trixRank !== '') {
+    const rankNum = parseInt(input.trixRank, 10);
+    const rankObj = TRIX_RANKS.find(r => r.rank === rankNum);
     if (rankObj) trixPts = rankObj.points;
   }
 
