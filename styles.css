@@ -545,14 +545,14 @@ body {
 .sub-counters-grid-3 {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 2px;
 }
 
 .sub-counter-box {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
+  padding: 6px 9px;
 }
 
 .sub-counter-box.pos-box {
@@ -565,6 +565,7 @@ body {
   font-weight: 700;
   color: var(--text-secondary);
   white-space: nowrap;
+  margin-left: 12px; /* السطر الجديد لإبعاد النص عن الأرقام */
 }
 
 .sub-counter-label.pos-label {
