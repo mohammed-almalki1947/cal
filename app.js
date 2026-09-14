@@ -24,10 +24,10 @@ const state = {
   appVersion: APP_VERSION,
   playerCount: 4, // 3 or 4
   players: [
-    { id: 1, totalScore: 0, input: getDefaultInput() },
-    { id: 2, totalScore: 0, input: getDefaultInput() },
-    { id: 3, totalScore: 0, input: getDefaultInput() },
-    { id: 4, totalScore: 0, input: getDefaultInput() }
+    { id: 1, name:'', totalScore: 0, input: getDefaultInput() },
+    { id: 2, name:'', totalScore: 0, input: getDefaultInput() },
+    { id: 3, name:'', totalScore: 0, input: getDefaultInput() },
+    { id: 4, name:'', totalScore: 0, input: getDefaultInput() }
   ],
   history: []
 };
@@ -441,7 +441,7 @@ function createPlayerColumnDOM(player, roundScore) {
   // Attach Event Listeners to column elements
   const nameInput = column.querySelector('.player-name-input');
   nameInput.addEventListener('change', (e) => {
-    player.name = e.target.value.trim() || `لاعب ${player.id}`;
+    player.name = e.target.value.trim();
     saveState();
     renderHistory();
   });
@@ -576,7 +576,7 @@ function closeResetModal() {
 
 function confirmResetAll() {
   state.players.forEach((p, idx) => {
-    p.name = `لاعب ${idx + 1}`;
+    p.name = '';
     p.totalScore = 0;
     p.input = getDefaultInput();
   });
