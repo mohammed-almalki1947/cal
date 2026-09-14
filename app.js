@@ -24,10 +24,10 @@ const state = {
   appVersion: APP_VERSION,
   playerCount: 4, // 3 or 4
   players: [
-    { id: 1, name: 'لاعب 1', totalScore: 0, input: getDefaultInput() },
-    { id: 2, name: 'لاعب 2', totalScore: 0, input: getDefaultInput() },
-    { id: 3, name: 'لاعب 3', totalScore: 0, input: getDefaultInput() },
-    { id: 4, name: 'لاعب 4', totalScore: 0, input: getDefaultInput() }
+    { id: 1, totalScore: 0, input: getDefaultInput() },
+    { id: 2, totalScore: 0, input: getDefaultInput() },
+    { id: 3, totalScore: 0, input: getDefaultInput() },
+    { id: 4, totalScore: 0, input: getDefaultInput() }
   ],
   history: []
 };
