@@ -153,12 +153,12 @@ function setPlayerCount(count) {
 function calculatePlayerRoundScore(input) {
   const queensNormalPts = (input.queensNormal || 0) * -25;
   const queensDoubledPts = (input.queensDoubled || 0) * -50;
-  const queensDoubledPosPts = (input.queensDoubledPos || 0) * 50;
+  const queensDoubledPosPts = (input.queensDoubledPos || 0) * 25;
 
   let kingPts = 0;
   if (input.kingState === 'normal') kingPts = -75;
   else if (input.kingState === 'doubled') kingPts = -150;
-  else if (input.kingState === 'posDouble') kingPts = 150;
+  else if (input.kingState === 'posDouble') kingPts = 75;
 
   const diamondsPts = (input.diamonds || 0) * -10;
   const tricksPts = (input.tricks || 0) * -10;
@@ -229,7 +229,7 @@ function createPlayerColumnDOM(player, roundScore) {
   const qNormal = player.input.queensNormal || 0;
   const qDoubled = player.input.queensDoubled || 0;
   const qDoubledPos = player.input.queensDoubledPos || 0;
-  const totalQueensPts = (qNormal * -25) + (qDoubled * -50) + (qDoubledPos * 50);
+  const totalQueensPts = (qNormal * -25) + (qDoubled * -50) + (qDoubledPos * 25);
 
   let queensTagClass = '';
   let formattedQueensPts = `${totalQueensPts}`;
@@ -250,7 +250,7 @@ function createPlayerColumnDOM(player, roundScore) {
     kingScoreTag = '-150';
     kingTagClass = 'active-negative';
   } else if (player.input.kingState === 'posDouble') {
-    kingScoreTag = '+150';
+    kingScoreTag = '+75';
     kingTagClass = 'active-positive';
   }
 
