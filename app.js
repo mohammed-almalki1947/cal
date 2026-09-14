@@ -313,9 +313,9 @@ function createPlayerColumnDOM(player, roundScore) {
             </div>
           </div>
 
-          <!-- 3. موجب (+50) -->
+          <!-- 3. موجب (+25) -->
           <div class="sub-counter-box pos-box">
-            <span class="sub-counter-label pos-label">موجب (+50)</span>
+            <span class="sub-counter-label pos-label">موجب (+25)</span>
             <div class="counter-control mini-counter">
               <button type="button" class="counter-btn" data-action="dec" data-contract="queensDoubledPos" ${qDoubledPos <= 0 ? 'disabled' : ''}>−</button>
               <span class="counter-value ${qDoubledPos > 0 ? 'has-value-pos' : ''}">${qDoubledPos}</span>
@@ -350,7 +350,7 @@ function createPlayerColumnDOM(player, roundScore) {
             مدبل (-150)
           </button>
           <button type="button" class="king-state-btn ${player.input.kingState === 'posDouble' ? 'active' : ''}" data-king-state="posDouble">
-            دبل موجب (+150)
+            دبل موجب (+75)
           </button>
         </div>
       </div>
